@@ -39,7 +39,7 @@ jobs:
     name: Call Build & Execute Workflow
     environment: hell
     needs: [ define-version-number ]
-    uses: Nykredit/.github/actions/ci-dotnet-build-n-test@main
+    uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-test.yml@main
     with:
       package-version: ${{ needs.define-version-number.package-version }}
       sonar-project-id: ${{ env.sonar-project-id }}
@@ -53,7 +53,7 @@ jobs:
     name: Call Build & Publish NuGet Packages
     environment: hell
     needs: [ define-version-number, call-build-n-test ]
-    uses: Nykredit/.github/actions/ci-dotnet-build-n-publish@main
+    uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-publish.yml@main
     with:
       package-version: ${{ needs.define-version-number.package-version }}
     secrets: 

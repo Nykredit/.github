@@ -1,0 +1,60 @@
+name: Build & Publish NuGet Packages
+on:
+  workflow_call:
+    inputs:
+      package-version:
+        required: true
+        type: string
+    secrets: 
+      nexus-user:
+        required: true
+        type: string
+      nexus-password:
+        required: true
+        type: string
+
+
+jobs:
+  build-n-publish:
+    name: Build and publish
+    runs-on: ubuntu-24.04
+    needs: build-n-test
+    env:
+      BRANCH_NAME: ${{ github.ref_name }}
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Add Nykredit NeXus package registry
+      shell: pwsh
+      env:
+        nexususer: ${{secrets.nexus-user}}
+        nexuspassword: ${{secrets.nexus-password}}
+      run: | 
+        dotnet nuget add source -n "NykreditNexus" --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_nuget_group/"
+        dotnet nuget add source -n NykreditNexusPush --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/"
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build 
+      run: dotnet build --no-restore
+    - name: Package projects
+      shell: pwsh
+      run: dotnet pack --output Dist /p:Version=${{env.fullSemVer}}
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: packaged-artifacts
+        path: Dist
+    - name: Upload packages to Nykredit NeXus artifactory
+      shell: pwsh
+      run: |
+         $nupkgFiles = Get-ChildItem -Path Dist -Filter *.nupkg -Name 
+         foreach($nupkgFile in $nupkgFiles)
+         {
+             dotnet nuget push Dist/$nupkgFile --source NykreditNexusPush
+         }
+

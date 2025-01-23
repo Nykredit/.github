@@ -23,76 +23,76 @@ on:
 jobs:
    build-n-test:
      name: Build and execute tests
-    runs-on: ubuntu-24.04
-    environment: hell
-    env:
-      VERSION: ${{ inputs.package-version }}
-      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
-      SONAR_PROJECTID: ${{ inputs.sonar-project-id }}
-      SONAR_APIKEY: ${{ secrets.sonar-api-key }}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-    - name: Add Nykredit NeXus package registry
-      shell: pwsh
-      env:
-        nexususer: ${{secrets.nexus-user}}
-        nexuspassword: ${{secrets.nexus-password}}
-      run: | 
-        dotnet nuget add source -n "NykreditNexus" --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_nuget_group/"
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Login to Nykredit NeXus Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: maven.tools.nykredit.it
-        username: ${{secrets.nexus-user}}
-        password: ${{secrets.nexus-password}}
-    - name: Set up JDK 17
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.17
-    - name: Cache SonarQube packages
-      uses: actions/cache@v4
-      with:
-        path: ~\.sonar\cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-    - name: Cache SonarQube scanner
-      id: cache-sonar-scanner
-      uses: actions/cache@v4
-      with:
-        path: .\.sonar\scanner
-        key: ${{ runner.os }}-sonar-scanner
-        restore-keys: ${{ runner.os }}-sonar-scanner
-    - name: Install SonarQube scanner
-      shell: pwsh
-      run: |
-        $sonarScannerIsInstalled = (dotnet tool list --global dotnet-sonarscanner | Out-String).ToLower().Contains("sonarscanner")
-        if($sonarScannerIsInstalled) {
-           dotnet tool update --global dotnet-sonarscanner
-        }
-        else {
-           dotnet tool install --global dotnet-sonarscanner
-        }
-    - name: Install dotnet-coverage
-      shell: pwsh
-      run: dotnet tool install --global dotnet-coverage
-    - name: Start SonarScanner
-      shell: pwsh
-      run: |
-        dotnet sonarscanner begin /k:$Env:SONAR_PROJECTID /v:$Env:VERSION /d:sonar.token=$Env:SONAR_APIKEY /d:sonar.dotnet.excludeTestProjects=$True /d:sonar.host.url=https://sonarqube.tools.nykredit.it  /d:sonar.language=cs /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml | Write-Host
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Run tests
-      run: dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage.xml
-        path: coverage.xml
-    - name: End SonarScanner
-      shell: pwsh
-      run: |
-        dotnet sonarscanner end /d:sonar.token=$Env:SONAR_APIKEY | Write-Host
+     runs-on: ubuntu-24.04
+     environment: hell
+     env:
+       VERSION: ${{ inputs.package-version }}
+       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
+       SONAR_PROJECTID: ${{ inputs.sonar-project-id }}
+       SONAR_APIKEY: ${{ secrets.sonar-api-key }}
+     steps:
+     - uses: actions/checkout@v4
+     - name: Setup .NET
+       uses: actions/setup-dotnet@v4
+     - name: Add Nykredit NeXus package registry
+       shell: pwsh
+       env:
+         nexususer: ${{secrets.nexus-user}}
+         nexuspassword: ${{secrets.nexus-password}}
+       run: | 
+         dotnet nuget add source -n "NykreditNexus" --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_nuget_group/"
+     - name: Restore dependencies
+       run: dotnet restore
+     - name: Login to Nykredit NeXus Container Registry
+       uses: docker/login-action@v3
+       with:
+         registry: maven.tools.nykredit.it
+         username: ${{secrets.nexus-user}}
+         password: ${{secrets.nexus-password}}
+     - name: Set up JDK 17
+       uses: actions/setup-java@v1
+       with:
+         java-version: 1.17
+     - name: Cache SonarQube packages
+       uses: actions/cache@v4
+       with:
+         path: ~\.sonar\cache
+         key: ${{ runner.os }}-sonar
+         restore-keys: ${{ runner.os }}-sonar
+     - name: Cache SonarQube scanner
+       id: cache-sonar-scanner
+       uses: actions/cache@v4
+       with:
+         path: .\.sonar\scanner
+         key: ${{ runner.os }}-sonar-scanner
+         restore-keys: ${{ runner.os }}-sonar-scanner
+     - name: Install SonarQube scanner
+       shell: pwsh
+       run: |
+         $sonarScannerIsInstalled = (dotnet tool list --global dotnet-sonarscanner | Out-String).ToLower().Contains("sonarscanner")
+         if($sonarScannerIsInstalled) {
+            dotnet tool update --global dotnet-sonarscanner
+          }
+         else {
+            dotnet tool install --global dotnet-sonarscanner
+         }
+     - name: Install dotnet-coverage
+       shell: pwsh
+       run: dotnet tool install --global dotnet-coverage
+     - name: Start SonarScanner
+       shell: pwsh
+       run: |
+         dotnet sonarscanner begin /k:$Env:SONAR_PROJECTID /v:$Env:VERSION /d:sonar.token=$Env:SONAR_APIKEY /d:sonar.dotnet.excludeTestProjects=$True /d:sonar.host.url=https://sonarqube.tools.nykredit.it  /d:sonar.language=cs /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml | Write-Host
+     - name: Build
+       run: dotnet build --no-restore
+     - name: Run tests
+       run: dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+     - name: Upload coverage report
+       uses: actions/upload-artifact@v4
+       with:
+         name: coverage.xml
+         path: coverage.xml
+     - name: End SonarScanner
+       shell: pwsh
+       run: |
+         dotnet sonarscanner end /d:sonar.token=$Env:SONAR_APIKEY | Write-Host

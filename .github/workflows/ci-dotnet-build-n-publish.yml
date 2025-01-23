@@ -18,6 +18,7 @@ jobs:
   build-n-publish:
     name: Build and publish
     runs-on: ubuntu-24.04
+    environment: hell
     needs: build-n-test
     env:
       BRANCH_NAME: ${{ github.ref_name }}

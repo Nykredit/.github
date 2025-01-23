@@ -24,6 +24,7 @@ jobs:
    build-n-test:
      name: Build and execute tests
     runs-on: ubuntu-24.04
+    environment: hell
     env:
       VERSION: ${{ inputs.package-version }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    

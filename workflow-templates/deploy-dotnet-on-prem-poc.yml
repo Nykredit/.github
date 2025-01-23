@@ -37,7 +37,6 @@ jobs:
     
   call-build-n-test:
     name: Call Build & Execute Workflow
-    environment: hell
     needs: [ define-version-number ]
     uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-test.yml@main
     with:
@@ -51,7 +50,6 @@ jobs:
 
   call-build-n-publish:
     name: Call Build & Publish NuGet Packages
-    environment: hell
     needs: [ define-version-number, call-build-n-test ]
     uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-publish.yml@main
     with:

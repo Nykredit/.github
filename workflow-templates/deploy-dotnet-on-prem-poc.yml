@@ -5,10 +5,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  SONAR_PROJECT_ID: 'id-of-project-in-sonarqube'
-  
-
 jobs:
   define-version-number:
     name: Calculate SemVer
@@ -41,7 +37,7 @@ jobs:
     uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-test.yml@main
     with:
       package-version: ${{ needs.define-version-number.package-version }}
-      sonar-project-id: ${{ env.sonar-project-id }}
+      sonar-project-id: 'id-of-project-in-sonarqube'
     secrets: 
       sonar-api-key: ${{secrets.SONAR_APIKEY}}
       nexus-user: ${{secrets.NEXUS_USER}}

@@ -41,7 +41,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Package projects
       shell: pwsh
-      run: dotnet pack --output Dist /p:Version=${{env.fullSemVer}}
+      run: dotnet pack --output Dist /p:Version=${{inputs.package-version}}
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:

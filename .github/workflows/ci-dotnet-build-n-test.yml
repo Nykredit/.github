@@ -11,13 +11,10 @@ on:
     secrets: 
       sonar-api-key:
         required: true   
-        type: string
       nexus-user:
         required: true
-        type: string
       nexus-password:
         required: true
-        type: string
 
 
 jobs:

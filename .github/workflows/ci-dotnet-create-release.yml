@@ -41,4 +41,3 @@ jobs:
          $tagName = "v$nextSemver"
          Write-Host "Using tag name $tagName" 
          gh release create $tagName   
-         git push origin $tagName

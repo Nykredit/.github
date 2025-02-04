@@ -1,0 +1,7 @@
+{
+    "name": "Deploy .NET project to on-prem Octopus installation",
+    "description": "Push updated NuGet package to Nykredit Nexus, create release in Octopus and deploy to default environment",
+    "creator": "El Caído del Equipo del Diablo",
+    "iconName": "dotnet-octopus",
+    "categories": ["Deployment", "C#", ".NET"]
+}

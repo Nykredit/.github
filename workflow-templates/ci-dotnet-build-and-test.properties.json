@@ -1,0 +1,7 @@
+{
+    "name": "Build, Test & Create Tagged Release of .NET project",
+    "description": "Will build solution, execute tests, update SonarQube stats and if everything succeeds: create a tagged release",
+    "creator": "El Caído del Equipo del Diablo",
+    "iconName": "dotnet-octopus",
+    "categories": ["CI", "C#", ".NET"]
+}

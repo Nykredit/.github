@@ -2,9 +2,6 @@ name: Build & Run Tests
 on:
   workflow_call:
     inputs:
-      package-version:
-        required: true
-        type: string
       sonar-project-id:
         required: true # We'll make this optional later on
         type: string
@@ -18,12 +15,30 @@ on:
 
 
 jobs:
+   define-version-number:
+     name: Calculate SemVer
+     runs-on: ubuntu-24.04
+     outputs: 
+       package-version: ${{ steps.version_step.outputs.majorMinorPatch }}
+     steps:  
+     - name: Checkout
+       uses: actions/checkout@v4
+       with:
+        fetch-depth: 0  
+     - name: Install GitVersion
+       uses: gittools/actions/gitversion/setup@v3.1.3
+       with:
+        versionSpec: '6.0.x'
+     - name: Determine SemVer
+       id: version_step
+       uses: gittools/actions/gitversion/execute@v3.1.3
+
    build-n-test:
      name: Build and execute tests
      runs-on: ubuntu-24.04
-     environment: hell
+     needs: [ define-version-number ]
      env:
-       VERSION: ${{ inputs.package-version }}
+       VERSION: ${{ needs.define-version-number.outputs.package-version }}
        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
        SONAR_PROJECTID: ${{ inputs.sonar-project-id }}
        SONAR_APIKEY: ${{ secrets.sonar-api-key }}

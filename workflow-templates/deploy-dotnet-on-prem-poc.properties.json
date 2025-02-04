@@ -1,7 +1,0 @@
-{
-    "name": "Deployment of .NET (core) project to on-prem Octopus installation",
-    "description": "I mean, it's not like I be dun' cookin' or not'n... Party still vibing!",
-    "creator": "El Caído del Equipo del Diablo",
-    "iconName": "dotnet-octopus",
-    "categories": ["Deployment", "C#", ".NET"]
-}

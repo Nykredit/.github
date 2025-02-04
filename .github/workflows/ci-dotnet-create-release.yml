@@ -37,8 +37,7 @@ jobs:
          $nextSemver = "$major.$minor.$build"
          Write-Host "Will output next SemVer=$nextSemver" 
          echo "nextSemVer=$nextSemver" >> "$GITHUB_OUTPUT"
-    - name: Increment SemVer
-      id: version_increment
+    - name: Create tag
       shell: pwsh
       env: 
         semver: ${{steps.version_increment.outputs.nextSemver }}  

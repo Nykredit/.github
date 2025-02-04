@@ -41,8 +41,10 @@ jobs:
       shell: pwsh
       env: 
         semver: ${{steps.version_increment.outputs.nextSemver }}  
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}        
       run: |
         $tagName = "v$Env:semver"
-        git tag -a $tagName -m "Creating version $Env:semver for deployment"   
+        gh release create $tagName   
         git push origin $tagName
 

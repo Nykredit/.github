@@ -28,6 +28,8 @@ jobs:
       shell: pwsh
       env: 
         currentsemver: ${{steps.version_step.outputs.majorMinorPatch }}  
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}        
       run: |
          $semverString = "$Env:currentsemver"
          $semver =  [version]$semverString
@@ -35,16 +37,8 @@ jobs:
          $minor = $semver.Minor
          $build = $semver.Build + 1
          $nextSemver = "$major.$minor.$build"
-         Write-Host "Will output next SemVer=$nextSemver" 
-         echo next-semver=$nextSemver >> "$GITHUB_OUTPUT"
-    - name: Create tag
-      shell: pwsh
-      env: 
-        semver: ${{steps.version_increment.outputs.next-semver }}  
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GH_REPO: ${{ github.repository }}        
-      run: |
-        $tagName = "v$Env:semver"
-        gh release create $tagName   
-        git push origin $tagName
-
+         Write-Host "Will use next SemVer=$nextSemver" 
+         $tagName = "v$nextSemver"
+         Write-Host "Using tag name $tagName" 
+         gh release create $tagName   
+         git push origin $tagName

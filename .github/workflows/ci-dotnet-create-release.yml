@@ -29,13 +29,15 @@ jobs:
       env: 
         currentsemver: ${{steps.version_step.outputs.majorMinorPatch }}  
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GH_REPO: ${{ github.repository }}        
+        GH_REPO: ${{ github.repository }}    
+        #SURN - 2024-02-05: It seems we don't actually need to manually calculate SemVer increment... I'm leaving the mechanics in for now, but have removed the +1 manual incrementing    
+        #if you be reading this a couple of weeks or more from now and everything be all fine and dandy, jus' delete the whole major-minor-build-shabang
       run: |
          $semverString = "$Env:currentsemver"
          $semver =  [version]$semverString
          $major = $semver.Major
          $minor = $semver.Minor
-         $build = $semver.Build + 1
+         $build = $semver.Build
          $nextSemver = "$major.$minor.$build"
          Write-Host "Will use next SemVer=$nextSemver" 
          $tagName = "v$nextSemver"

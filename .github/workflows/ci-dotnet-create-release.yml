@@ -3,11 +3,10 @@ name: Create tagged .NET release
 on:
   workflow_call:
     with:
-      increment-version:
-        description: 'Whether or not to increment the semantic version'
-        default: false
-        required: false
-        type: boolean
+      caller-event:
+        description: 'Which event caused execution of caller workflow'
+        required: true
+        type: string
     
 jobs:
   create-tagged-version:
@@ -37,14 +36,14 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GH_REPO: ${{ github.repository }}    
         this_eventname: ${{ github.event_name}}
-        incsemver: ${{ inputs.increment-version}}
+        callerevent: ${{ inputs.caller-event}}
       run: |
          $semverString = "$Env:currentsemver"
          $semver =  [version]$semverString
          $major = $semver.Major
          $minor = $semver.Minor
          $build = $semver.Build
-         if(($Env:incsemver).ToLower() -eq 'true') 
+         if(($Env:callerevent -eq 'workflow_dispatch') 
          {
             $build = $build + 1
          }

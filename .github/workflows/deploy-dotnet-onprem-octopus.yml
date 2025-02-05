@@ -60,6 +60,14 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Checkout .github repo and contained scripts
+      uses: actions/checkout@v4
+      with:
+        repository: Nykredit/.github
+        path: _nykredit_tools_
+    - name: Move Scripts-folder
+      shell: pwsh
+      run: Move-Item -Path ./_nykredit_tools_/Scripts -Destination ./_scripts_      
     - name: Restore dependencies
       env:
         nexususer: ${{secrets.nexus-user}}
@@ -69,7 +77,7 @@ jobs:
         mainprojectfolder: ${{env.mainprojectfolder}}
       shell: pwsh
       run: |
-        Scripts/ProduceNugetConfigFile.ps1 -NexusUser $Env:nexususer -NexusPassword $Env:nexuspassword -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder
+        _scripts_/ProduceNugetConfigFile.ps1 -NexusUser $Env:nexususer -NexusPassword $Env:nexuspassword -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder
         dotnet restore --configfile ./nuget.config
     - name: Build
       shell: pwsh
@@ -79,7 +87,7 @@ jobs:
     - name: Build & Pack
       shell: pwsh
       run: |
-        Scripts/ProduceNuSpecFile.ps1 -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder -PublishFolder "bin/Release/net8.0/win-x64/publish"
+        _scripts_/ProduceNuSpecFile.ps1 -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder -PublishFolder "bin/Release/net8.0/win-x64/publish"
         dotnet pack --output ./packages -c Release -p:Nuspecfile=Package.nuspec
     
     - name: NuGet Push dat bad boy!

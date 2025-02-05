@@ -20,12 +20,11 @@ jobs:
     name: Call Create Tagged Release Workflow
     needs: [ call-build-n-test ]
     uses: Nykredit/.github/.github/workflows/ci-dotnet-create-release.yml@main
-    with:
-      increment-version: ${{ github.event_name == 'workflow_dispatch' ? 'true' : 'false' }}
+      with: ${{ github.event_name }}
 
   call-deploy:
     name: Call Deploy Workflow
-    uses: Nykredit/.github/.github/workflows/deploy-dotnet-onprem-octpus.yml@main
+    uses: Nykredit/.github/.github/workflows/deploy-dotnet-onprem-octopus.yml@main
     with:
       package-id: 'INSERT PACKAGE ID'
       main-project: 'INSERT MAIN PROJECT'

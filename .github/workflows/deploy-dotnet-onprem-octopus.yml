@@ -1,4 +1,4 @@
-name: Create tagged .NET release 
+name: Deploy to on-prem Octopus
 
 on:
   workflow_call:

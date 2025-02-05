@@ -20,6 +20,8 @@ jobs:
     name: Call Create Tagged Release Workflow
     needs: [ call-build-n-test ]
     uses: Nykredit/.github/.github/workflows/ci-dotnet-create-release.yml@main
+    with:
+      increment-version: ${{ github.event_name == 'workflow_dispatch' ? 'true' : 'false' }}
 
   call-deploy:
     name: Call Deploy Workflow

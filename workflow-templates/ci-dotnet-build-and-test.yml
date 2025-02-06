@@ -26,6 +26,7 @@ jobs:
   call-deploy:
     name: Call Deploy Workflow
     uses: Nykredit/.github/.github/workflows/deploy-dotnet-onprem-octopus.yml@main
+    needs: [ call-create-release ]
     with:
       package-id: 'INSERT PACKAGE ID'
       main-project: 'INSERT MAIN PROJECT'

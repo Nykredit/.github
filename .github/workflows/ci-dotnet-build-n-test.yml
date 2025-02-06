@@ -15,8 +15,8 @@ on:
         required: true
 
 env:
-  usesonar: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }}
-  skipsonar: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }}
+  usesonar: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }}
+  skipsonar: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }}
 
 jobs:
    define-version-number:
@@ -41,7 +41,7 @@ jobs:
      name: Build and execute tests w. SonarQube
      runs-on: ubuntu-24.04
      needs: [ define-version-number ]
-     if: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }} 
+     if: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }} 
      env:
        VERSION: ${{ needs.define-version-number.outputs.package-version }}
        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
@@ -118,7 +118,7 @@ jobs:
      name: Build and execute tests
      runs-on: ubuntu-24.04
      needs: [ define-version-number ]
-     if: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }}
+     if: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }}
      env:
        VERSION: ${{ needs.define-version-number.outputs.package-version }}
        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    

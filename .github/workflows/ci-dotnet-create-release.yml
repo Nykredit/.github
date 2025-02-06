@@ -14,7 +14,7 @@ jobs:
       id-token: write
       contents: write
       repository-projects: write    
-    name: Calculate SemVer
+    name: Create tag & release
     runs-on: ubuntu-24.04
     steps:  
     - name: Checkout
@@ -28,8 +28,7 @@ jobs:
     - name: Determine SemVer
       id: version_step
       uses: gittools/actions/gitversion/execute@v3.1.3
-    - name: Increment SemVer
-      id: version_increment
+    - name: Create release
       shell: pwsh
       env: 
         currentsemver: ${{steps.version_step.outputs.majorMinorPatch }}  
@@ -47,6 +46,9 @@ jobs:
          {
             $build = $build + 1
          }
+         else {
+            $build = $build + 1
+         }   
          $nextSemver = "$major.$minor.$build"
          Write-Host "Will use next SemVer=$nextSemver" 
          $tagName = "v$nextSemver"

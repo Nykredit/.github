@@ -97,9 +97,9 @@ jobs:
       shell: pwsh
       run: |
         $packageFile = "./packages/${Env:packageid}.${env:packageversion}.nupkg"
-        Write-Host "And now Ladies & Gentlemen, the Great Sunermi will attempt with the NugGet Push of package: $packageFile "
+        Write-Host "And now Ladies & Gentlemen, the Great Gitubatsi will attempt with the NugGet Push of package: $packageFile "
         dotnet nuget add source -n NykreditNexusPush --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/"
-        dotnet nuget push $packageFile --source https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/
+        dotnet nuget push $packageFile --source https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/ --sk
  
   enter-octopus:
     name: Create release on Octopus server and deploy to test  

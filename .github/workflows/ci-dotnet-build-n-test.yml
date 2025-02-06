@@ -41,7 +41,7 @@ jobs:
      name: Build and execute tests
      runs-on: ubuntu-24.04
      needs: [ define-version-number ]
-     if: ${{ env.usesonar }} 
+     if: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }} 
      env:
        VERSION: ${{ needs.define-version-number.outputs.package-version }}
        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
@@ -118,7 +118,7 @@ jobs:
      name: Build and execute tests
      runs-on: ubuntu-24.04
      needs: [ define-version-number ]
-     if: ${{ env.skipsonar }}
+     if: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }}
      env:
        VERSION: ${{ needs.define-version-number.outputs.package-version }}
        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    

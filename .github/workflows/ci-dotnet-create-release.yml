@@ -2,7 +2,7 @@ name: Create tagged .NET release
 
 on:
   workflow_call:
-    with:
+    inputs:
       caller-event:
         description: 'Which event caused execution of caller workflow'
         required: true

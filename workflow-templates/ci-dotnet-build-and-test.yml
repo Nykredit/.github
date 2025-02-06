@@ -10,7 +10,7 @@ jobs:
     name: Call Build & Test Workflow
     uses: Nykredit/.github/.github/workflows/ci-dotnet-build-n-test.yml@main
     with:
-      sonar-project-id: 'id-of-project-in-sonarqube'
+      sonar-project-id: 'id-of-project-in-sonarqube - SET TO EMPTY STRING TO SKIP SONARQUBE'
     secrets: 
       sonar-api-key: ${{secrets.SONAR_APIKEY}}
       nexus-user: ${{secrets.NEXUS_USER}}

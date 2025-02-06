@@ -43,7 +43,7 @@ jobs:
          $major = $semver.Major
          $minor = $semver.Minor
          $build = $semver.Build
-         if(($Env:callerevent -eq 'workflow_dispatch') 
+         if($Env:callerevent -eq 'workflow_dispatch') 
          {
             $build = $build + 1
          }

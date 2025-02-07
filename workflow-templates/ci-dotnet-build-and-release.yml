@@ -1,4 +1,4 @@
-name: Build & test .NET solution + create tagged release
+name: Build, test & deploy .NET API/Application
 
 on:
   push:

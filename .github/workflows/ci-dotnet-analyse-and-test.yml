@@ -16,7 +16,9 @@ on:
         required: true
       nexus-password:
         required: true
-
+      snyk-token:
+        required: true
+  
 env:
   usesonar: ${{ fromJSON('[true, false]')[inputs.sonar-project-id == ''] }}
   skipsonar: ${{ fromJSON('[false, true]')[inputs.sonar-project-id == ''] }}
@@ -42,91 +44,89 @@ jobs:
 
 
    static-analysis:
-    name: Restore dependencies and peroform static analysis
-    runs-on: ubuntu-24.04
-    needs: [ define-version-number ]
-    env:
-      VERSION: ${{ needs.define-version-number.outputs.package-version }}
-      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
-      SONAR_PROJECTID: ${{ inputs.sonar-project-id }}
-      SONAR_APIKEY: ${{ secrets.sonar-api-key }}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-    - name: Login to Nykredit NeXus Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: maven.tools.nykredit.it
-        username: ${{secrets.nexus-user}}
-        password: ${{secrets.nexus-password}}
-    - name: Add Nykredit NeXus package registry
-      shell: pwsh
-      env:
-        nexususer: ${{secrets.nexus-user}}
-        nexuspassword: ${{secrets.nexus-password}}
-      run: | 
-        dotnet nuget add source -n "NykreditNexus" --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_nuget_group/"
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Find solution file
-      shell: pwsh
-      id: find-solution-file
-      run: |
-        $solutionFiles = Get-ChildItem -Path ./ | Where-Object { $_.Name.ToLower().EndsWith(".sln")}
-        $solutionFileName = $solutionFiles[0].Name
-        echo "SOLFIL=$solutionFile\n" >> $GITHUB_OUTPUT
-    - name: Snyk Analyze Solution File
-      uses: snyk/actions/dotnet@master
-      env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          SNYK_API: "https://api.eu.snyk.io"
-          FIL: ${{ steps.find-solution-file.outputs.SOLFIL}}
-      continue-on-error: true
-      with:
-        args: --file=$FIL | tee snyk_results.txt
-    - name: Capture Snyk results
-      id: capture_output
-      run: |
-          OUTPUT=$(cat snyk_output.txt | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g')
-          # echo "output=$OUTPUT" >> $GITHUB_ENV
-          # echo "::set-output name=snyk_output::$OUTPUT"
-
-
-          delimiter="$(openssl rand -hex 8)"
-          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-          echo "## Snyk report output" >> $GITHUB_OUTPUT
-          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo '```snyk' >> $GITHUB_OUTPUT
-          echo "$OUTPUT" >> $GITHUB_OUTPUT
-          echo '```' >> $GITHUB_OUTPUT
-          echo "</details>" >> $GITHUB_OUTPUT
-          echo "${delimiter}" >> $GITHUB_OUTPUT
-
-    - name: Publish Snyk output to Task Summary
-      env:
-        SUMMARY: ${{ steps.capture_output.outputs.summary }}
-      run: |
-        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
-      
-    - name: Push Snyk Output to PR
-      uses: actions/github-script@v7
-      env:
-        SUMMARY: "${{ steps.capture_output.outputs.summary }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-           const body = `${process.env.SUMMARY}`;
-           github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-           })
-
-
-
+     name: Restore dependencies and perform static analysis
+     runs-on: ubuntu-24.04
+     needs: [ define-version-number ]
+     env:
+       VERSION: ${{ needs.define-version-number.outputs.package-version }}
+       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages    
+       SONAR_PROJECTID: ${{ inputs.sonar-project-id }}
+       SONAR_APIKEY: ${{ secrets.sonar-api-key }}
+     steps:
+     - uses: actions/checkout@v4
+     - name: Setup .NET
+       uses: actions/setup-dotnet@v4
+     - name: Login to Nykredit NeXus Container Registry
+       uses: docker/login-action@v3
+       with:
+         registry: maven.tools.nykredit.it
+         username: ${{secrets.nexus-user}}
+         password: ${{secrets.nexus-password}}
+     - name: Add Nykredit NeXus package registry
+       shell: pwsh
+       env:
+         nexususer: ${{secrets.nexus-user}}
+         nexuspassword: ${{secrets.nexus-password}}
+       run: | 
+         dotnet nuget add source -n "NykreditNexus" --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_nuget_group/"
+     - name: Restore dependencies
+       run: dotnet restore
+     - name: Find solution file
+       shell: pwsh
+       id: find-solution-file
+       run: |
+         $solutionFiles = Get-ChildItem -Path ./ | Where-Object { $_.Name.ToLower().EndsWith(".sln")}
+         Write-Host "Solution files: $solutionFiles"
+         $solutionFileName = $solutionFiles[0].Name
+         Write-Host "Solution file name: $solutionFileName"
+         Write-Output "SOLFIL=$solutionFileName" >> $Env:GITHUB_OUTPUT
+     - name: Snyk Analyze Solution File
+       uses: snyk/actions/dotnet@master
+       env:
+           SNYK_TOKEN: ${{ secrets.snyk-token }}
+           SNYK_API: "https://api.eu.snyk.io"
+           FIL: ${{ steps.find-solution-file.outputs.SOLFIL}}
+       continue-on-error: true
+       with:
+         args: --file=$FIL | tee snyk_results.txt
+     - name: Capture Snyk results
+       id: capture_output
+       run: |
+           OUTPUT=$(cat snyk_results.txt | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g')
+           # echo "output=$OUTPUT" >> $GITHUB_ENV
+           # echo "::set-output name=snyk_results::$OUTPUT"
+           delimiter="$(openssl rand -hex 8)"
+           echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+           echo "## Snyk report output" >> $GITHUB_OUTPUT
+           echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+           echo "" >> $GITHUB_OUTPUT
+           echo '```snyk' >> $GITHUB_OUTPUT
+           echo "$OUTPUT" >> $GITHUB_OUTPUT
+           echo '```' >> $GITHUB_OUTPUT
+           echo "</details>" >> $GITHUB_OUTPUT
+           echo "${delimiter}" >> $GITHUB_OUTPUT
+   
+     - name: Publish Snyk output to Task Summary
+       env:
+         SUMMARY: ${{ steps.capture_output.outputs.summary }}
+       run: |
+         echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+         
+     - name: Push Snyk Output to PR
+       uses: actions/github-script@v7
+       env:
+         SUMMARY: "${{ steps.capture_output.outputs.summary }}"
+       with:
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         script: |
+            const body = `${process.env.SUMMARY}`;
+            github.rest.issues.createComment({
+               issue_number: context.issue.number,
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               body: body
+             })
+   
 
    build-n-test-w-sonar:
      name: Build and execute tests w. SonarQube

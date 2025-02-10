@@ -1,0 +1,19 @@
+name: Build, analyze & test .NET API/Application
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  call-build-n-test:
+    name: Call Build & Test Workflow
+    uses: Nykredit/.github/.github/workflows/ci-dotnet-analyze-on-pr.yml@main
+    with:
+      sonar-project-id: 'id-of-project-in-sonarqube - SET TO EMPTY STRING TO SKIP SONARQUBE'
+    secrets: 
+      sonar-api-key: ${{secrets.SONAR_APIKEY}}
+      nexus-user: ${{secrets.NEXUS_USER}}
+      nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+      snyk-token: ${{secrets.SNYK_TOKEN}}

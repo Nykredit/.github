@@ -1,0 +1,7 @@
+{
+    "name": "Build, Test & Analyze on Pull Request created for .NET project",
+    "description": "Will build solution, perform static analysis, execute tests & update SonarQube stats",
+    "creator": "El Caído del Equipo del Diablo",
+    "iconName": "dotnet-octopus",
+    "categories": ["CI", "C#", ".NET"]
+}

@@ -1,0 +1,187 @@
+name: Create tagged .NET release & Deploy On-Prem
+
+on:
+  workflow_call:
+    inputs:
+      package-id:
+        required: true 
+        type: string
+      main-project:
+        required: true 
+        type: string
+      octopus-project:
+        required: true 
+        type: string
+      octopus-environment:
+        required: true 
+        type: string
+      caller-event:
+        description: 'Which event caused execution of caller workflow'
+        required: true
+        type: string
+  
+    secrets: 
+      nexus-user:
+        required: true
+      nexus-password:
+        required: true
+      octopus-api-key:
+        required: true
+    
+jobs:
+  create-tagged-version:
+    permissions:
+      id-token: write
+      contents: write
+      repository-projects: write    
+    name: Create tag & release
+    runs-on: ubuntu-24.04
+    steps:  
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v3.1.3
+      with:
+        versionSpec: '6.0.x'
+    - name: Determine SemVer
+      id: version_step
+      uses: gittools/actions/gitversion/execute@v3.1.3
+    - name: Create release
+      shell: pwsh
+      env: 
+        currentsemver: ${{steps.version_step.outputs.majorMinorPatch }}  
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}    
+        this_eventname: ${{ github.event_name}}
+        callerevent: ${{ inputs.caller-event}}
+      run: |
+         $semverString = "$Env:currentsemver"
+         $semver =  [version]$semverString
+         $major = $semver.Major
+         $minor = $semver.Minor
+         $build = $semver.Build
+         if($Env:callerevent -eq 'workflow_dispatch') 
+         {
+            $build = $build + 1
+         }
+         else {
+            $build = $build + 1
+         }   
+         $nextSemver = "$major.$minor.$build"
+         Write-Host "Will use next SemVer=$nextSemver" 
+         $tagName = "v$nextSemver"
+         Write-Host "Using tag name $tagName" 
+         gh release create $tagName   
+
+  define-version-number:
+    name: Calculate SemVer
+    runs-on: ubuntu-24.04
+    needs: [ create-tagged-version ]
+    outputs:
+       package-version: ${{ steps.version_step.outputs.majorMinorPatch }}
+    steps:  
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v3.1.3
+      with:
+        versionSpec: '6.0.x'
+    - name: Determine SemVer
+      id: version_step
+      uses: gittools/actions/gitversion/execute@v3.1.3
+          
+  build-and-publish:
+    name: Build & Deploy yo!
+    runs-on: windows-2025
+    needs: [ define-version-number ]
+    env:
+      packageversion: ${{ needs.define-version-number.outputs.package-version }}
+      packageid: ${{ inputs.package-id }}
+      mainprojectfolder: ${{ inputs.main-project }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Checkout .github repo and contained scripts
+        uses: actions/checkout@v4
+        with:
+          repository: Nykredit/.github
+          path: _nykredit_tools_
+      - name: Move Scripts-folder
+        shell: pwsh
+        run: Move-Item -Path ./_nykredit_tools_/Scripts -Destination ./_scripts_      
+      - name: Restore dependencies
+        env:
+          nexususer: ${{secrets.nexus-user}}
+          nexuspassword: ${{secrets.nexus-password}}
+          packageid: ${{env.packageid}}
+          packageversion: ${{env.packageversion}}
+          mainprojectfolder: ${{env.mainprojectfolder}}
+        shell: pwsh
+        run: |
+          _scripts_/ProduceNugetConfigFile.ps1 -NexusUser $Env:nexususer -NexusPassword $Env:nexuspassword -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder
+          dotnet restore --configfile ./nuget.config
+      - name: Build
+        shell: pwsh
+        run: |
+          Write-Host "Executing dotnet publish on $Env:mainprojectfolder/${env:mainprojectfolder}.csproj"
+          dotnet publish -c Release $Env:mainprojectfolder/${env:mainprojectfolder}.csproj
+      - name: Build & Pack
+        shell: pwsh
+        run: |
+          _scripts_/ProduceNuSpecFile.ps1 -PackageId $Env:packageid -Version $Env:packageversion -MainProjectFolder $Env:mainprojectfolder -PublishFolder "bin/Release/net8.0/win-x64/publish"
+          dotnet pack --output ./packages -c Release -p:Nuspecfile=Package.nuspec
+        
+      - name: NuGet Push dat bad boy!
+        env: 
+           nexususer: ${{secrets.nexus-user}}
+           nexuspassword: ${{secrets.nexus-password}}
+        shell: pwsh
+        run: |
+          $packageFile = "./packages/${Env:packageid}.${env:packageversion}.nupkg"
+          Write-Host "And now Ladies & Gentlemen, the Great Gitubatsi will attempt with the NugGet Push of package: $packageFile "
+          dotnet nuget add source -n NykreditNexusPush --username $Env:nexususer --password $Env:nexuspassword --store-password-in-clear-text "https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/"
+          dotnet nuget push $packageFile --source https://maven.tools.nykredit.it/nexus/repository/itcm_solutions_releases/
+       
+  enter-octopus:
+    name: Create release on Octopus server and deploy to test  
+    runs-on: [self-hosted, diablo]
+    needs: [ build-and-publish ]
+                      
+    env:
+      OCTOPUS_URL: 'http://octopus.nykreditnet.net/'
+      OCTOPUS_API_KEY: ${{ secrets.octopus-api-key }}  
+      OCTOPUS_SPACE: 'Default'                         
+      OCTOPUS_PROJECT: ${{ inputs.octopus-project }} 
+      OCTOPUS_ENVIRONMENT: ${{ inputs.octopus-environment }}             
+          
+    steps:
+      - name: Log in to Octopus Deploy
+        uses: OctopusDeploy/login@34b6dcc1e86fa373c14e6a28c5507d221e4de629  #v1.0.2
+        with:
+          server: '${{ env.OCTOPUS_URL }}'
+          api_key: '${{ env.OCTOPUS_API_KEY }}'
+          
+      - name: Create Release
+        id: create_release
+        uses: OctopusDeploy/create-release-action@fea7e7b45c38c021b6bc5a14bd7eaa2ed5269214 #v3.2.2
+        with:
+          project: '${{ env.OCTOPUS_PROJECT }}'
+          space: '${{ env.OCTOPUS_SPACE }}'
+          release_number: '${{ needs.define-version-number.outputs.package-version }}'
+          
+      - name: Deploy Release
+        uses: OctopusDeploy/deploy-release-action@b10a606c903b0a5bce24102af9d066638ab429ac #v3.2.1
+        with:
+          project: '${{ env.OCTOPUS_PROJECT }}'
+          space: '${{ env.OCTOPUS_SPACE }}'
+          release_number: '${{ steps.create_release.outputs.release_number  }}'
+          environments: ${{ env.OCTOPUS_ENVIRONMENT }}
+                      

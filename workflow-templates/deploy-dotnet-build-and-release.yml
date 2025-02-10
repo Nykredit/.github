@@ -1,0 +1,22 @@
+name: Build & deploy .NET API/Application
+
+on:
+  push:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  call-build-and-deploy:
+    name: Call Build & Deploy Workflow
+    uses: Nykredit/.github/.github/workflows/deploy-dotnet-create-release-and-deploy.yml@main
+    with:
+      package-id: '<INSERT PACKAGE ID>'
+      main-project: '<INSERT NAME OF MAIN PROJECT TO RELEASE>'
+      octopus-project: '<INSERT NAME OF OCTOPUS PROJECT>'
+      octopus-environment: 'Test'
+      caller-event: ${{ github.event_name }}
+
+    secrets: 
+      nexus-user: ${{secrets.NEXUS_USER}}
+      nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+      octopus-api-key: ${{secrets.SONAR_APIKEY}}

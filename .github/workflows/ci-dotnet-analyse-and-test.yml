@@ -6,9 +6,6 @@ on:
         required: false
         type: string
         default: ''
-      solution-file:
-        required: true
-        type: string
     secrets: 
       sonar-api-key:
         required: true   

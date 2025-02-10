@@ -9,7 +9,7 @@ on:
 jobs:
   call-build-n-test:
     name: Call Build & Test Workflow
-    uses: Nykredit/.github/.github/workflows/ci-dotnet-analyze-on-pr.yml@main
+    uses: Nykredit/.github/.github/workflows/ci-dotnet-analyse-and-test.yml@main
     with:
       sonar-project-id: 'id-of-project-in-sonarqube - SET TO EMPTY STRING TO SKIP SONARQUBE'
     secrets: 

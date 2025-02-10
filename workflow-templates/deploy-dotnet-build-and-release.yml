@@ -4,6 +4,8 @@ on:
   pull_request:
     types:
       - closed
+    branches:
+      - main  
 
 jobs:
   call-build-and-deploy:
@@ -20,4 +22,4 @@ jobs:
     secrets: 
       nexus-user: ${{secrets.NEXUS_USER}}
       nexus-password: ${{ secrets.NEXUS_PASSWORD }}
-      octopus-api-key: ${{secrets.SONAR_APIKEY}}
+      octopus-api-key: ${{secrets.OCTOPUS_API_KEY}}

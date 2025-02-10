@@ -1,12 +1,13 @@
 name: Build & deploy .NET API/Application
 
 on:
-  push:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  pull_request:
+    types:
+      - closed
 
 jobs:
   call-build-and-deploy:
+    if: github.event.pull_request.merged == true
     name: Call Build & Deploy Workflow
     uses: Nykredit/.github/.github/workflows/deploy-dotnet-create-release-and-deploy.yml@main
     with:

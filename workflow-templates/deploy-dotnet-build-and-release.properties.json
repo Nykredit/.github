@@ -1,5 +1,5 @@
 {
-    "name": "Build, Create release and deploy .NET project On-Prem",
+    "name": "PR Merge: Build, Create release and deploy .NET project On-Prem",
     "description": "Will build solution, create a tagged release and a deployment on on-prem Octopus installation",
     "creator": "El Caído del Equipo del Diablo",
     "iconName": "dotnet-octopus",
